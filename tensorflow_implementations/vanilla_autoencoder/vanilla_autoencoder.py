@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
@@ -7,29 +6,25 @@ from functools import partial
 
 from sklearn.datasets import fetch_openml
 
-mnist = fetch_openml('mnist_784', version=1, cache=True)
 
-data, labels = mnist["data"], mnist["target"]
+def get_mnist_data():
+    print("Getting MNIST data..")
+    mnist = fetch_openml('mnist_784', version=1, cache=True)
+    data, labels = mnist["data"], mnist["target"]
 
-train_indices = np.random.permutation(70000)
+    train_indices = np.random.permutation(70000)
 
-test_data = data[train_indices[:70000//5]]
-train_data = data[train_indices[70000//5:]]
+    test_data = data[train_indices[:70000 // 5]]
+    train_data = data[train_indices[70000 // 5:]]
 
-m = train_data.shape[0]
+    m = train_data.shape[0]
 
-print(m)
-print(train_data.shape)
-print(labels.shape)
-
-some_digit = train_data[36000]
-some_digit_image = some_digit.reshape(28,28)
-plt.imshow(some_digit_image,cmap=matplotlib.cm.binary,interpolation="nearest")
-
-#plt.axis("off")
-#plt.show()
+    print("Retrieved MNIST data")
+    return train_data, test_data, m
 
 if __name__ == '__main__':
+
+    train_data, test_data, m = get_mnist_data()
 
     n_inputs = 28 * 28  # for MNIST
     n_hidden1 = 300
@@ -71,7 +66,7 @@ if __name__ == '__main__':
             n_batches = m//batch_size
             #n_batches = mnist.train.num_examples
             for batch in range(n_batches):
-                X_batch, y_batch = train_data[batch*batch_size: (batch + 1)*batch_size], labels[batch*batch_size: (batch + 1)*batch_size]
+                X_batch = train_data[batch*batch_size: (batch + 1)*batch_size]
                 sess.run(training_op, feed_dict={X: X_batch})
 
         reconstructions = outputs.eval(feed_dict={X: test_data[0: 10]})
