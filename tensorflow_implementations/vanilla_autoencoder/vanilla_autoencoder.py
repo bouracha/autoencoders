@@ -75,5 +75,23 @@ if __name__ == '__main__':
                 X_batch, y_batch = data[batch*batch_size: (batch + 1)*batch_size], labels[batch*batch_size: (batch + 1)*batch_size]
                 sess.run(training_op, feed_dict={X: X_batch})
 
+        reconstructions = outputs.eval(feed_dict={X: data[0: 10]})
 
 
+    print(reconstructions.shape)
+
+    plt.figure(figsize=(10, 4), dpi=100)
+    for i in range(10):
+        # display original
+        ax = plt.subplot(2, 10, i + 1)
+        plt.imshow(data[i].reshape(28, 28))
+        plt.gray()
+        ax.set_axis_off()
+
+        # display reconstruction
+        ax = plt.subplot(2, 10, i + 10 + 1)
+        plt.imshow(reconstructions[i].reshape(28, 28))
+        plt.gray()
+        ax.set_axis_off()
+
+    plt.show()
