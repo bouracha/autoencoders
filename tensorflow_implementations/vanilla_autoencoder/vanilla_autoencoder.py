@@ -4,11 +4,31 @@ from tensorflow.keras.datasets import mnist
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras import backend as K
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import pickle
 
 import tensorflow as tf
 from functools import partial
+
+#import mnist
+from sklearn.datasets import fetch_openml
+
+mnist = fetch_openml('mnist_784', version=1, cache=True)
+
+data, labels = mnist["data"], mnist["target"]
+m = data.shape[0]
+
+print(m)
+print(data.shape)
+print(labels.shape)
+
+some_digit = data[36000]
+some_digit_image = some_digit.reshape(28,28)
+plt.imshow(some_digit_image,cmap=matplotlib.cm.binary,interpolation="nearest")
+
+#plt.axis("off")
+#plt.show()
 
 if __name__ == '__main__':
 
@@ -19,7 +39,7 @@ if __name__ == '__main__':
     n_outputs = n_inputs
 
     learning_rate = 0.01
-    l2_regulizer = 0.0001
+    l2_reg = 0.0001
 
     X = tf.placeholder(tf.float32, shape=[None, n_inputs])
 
@@ -45,13 +65,15 @@ if __name__ == '__main__':
 
     n_epochs = 5
     batch_size = 150
-    withtf.Session()
-    assess: init.run()
-    for epoch in range(n_epochs):
-        n_batches = mnist.train.num_examples // batch_size
-        for iteration in range(n_batches):
-            X_batch, y_batch = mnist.train.next_batch(batch_size)
-            sess.run(training_op, feed_dict={X: X_batch})
+    with tf.Session()   as sess:
+        init.run()
+        for epoch in range(n_epochs):
+            print("Epoch:", epoch, "/", n_epochs)
+            n_batches = m//batch_size
+            #n_batches = mnist.train.num_examples
+            for batch in range(n_batches):
+                X_batch, y_batch = data[batch*batch_size: (batch + 1)*batch_size], labels[batch*batch_size: (batch + 1)*batch_size]
+                sess.run(training_op, feed_dict={X: X_batch})
 
 
 
