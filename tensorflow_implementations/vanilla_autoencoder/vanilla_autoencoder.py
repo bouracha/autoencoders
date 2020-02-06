@@ -7,83 +7,51 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 
+import tensorflow as tf
+from functools import partial
+
 if __name__ == '__main__':
 
-    input_img = Input(shape=(28, 28, 1))    # adapt this if using 'channels_first' image data format
+    n_inputs = 28 * 28  # for MNIST
+    n_hidden1 = 300
+    n_hidden2 = 150
+    n_hidden3 = n_hidden1
+    n_outputs = n_inputs
 
-    x = Conv2D(16, (3, 3), activation='relu', padding='same')(input_img)
-    x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
-    x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
-    encoded = MaxPooling2D((2, 2), padding='same')(x)
+    learning_rate = 0.01
+    l2_regulizer = 0.0001
 
-    # at this point the representation is (4, 4, 8), i.e. 128-dimensional
+    X = tf.placeholder(tf.float32, shape=[None, n_inputs])
 
-    x = Conv2D(8, (3, 3), activation='relu', padding='same')(encoded)
-    x = UpSampling2D((2, 2))(x)
-    x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
-    x = UpSampling2D((2, 2))(x)
-    x = Conv2D(16, (3, 3), activation='relu')(x)
-    x = UpSampling2D((2, 2))(x)
-    decoded = Conv2D(1, (3, 3), activation='sigmoid', padding='same')(x)
+    he_init = tf.contrib.layers.variance_scaling_initializer()
+    l2_regularizer = tf.contrib.layers.l2_regularizer(l2_reg)
+    ## Partial allows to use the function my_dense_layer with same set parameters each time
+    my_dense_layer = partial(tf.layers.dense, activation=tf.nn.elu, kernel_initializer=he_init, kernel_regularizer=l2_regularizer)
 
-    autoencoder = Model(input_img, decoded)
-    autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
+    hidden1 = my_dense_layer(X, n_hidden1)
+    hidden2 = my_dense_layer(hidden1, n_hidden2)
+    hidden3 = my_dense_layer(hidden2, n_hidden3)
+    outputs = my_dense_layer(hidden3, n_outputs, activation=None) ##Overwrite: no activation fn in last layer
 
-    # To train it, use the original MNIST digits with shape (samples, 3, 28, 28),
-    # and just normalize pixel values between 0 and 1
+    reconstruction_loss = tf.reduce_mean(tf.square(outputs - X))  # MSE
 
-    (x_train, _), (x_test, _) = mnist.load_data()
+    reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+    loss = tf.add_n([reconstruction_loss] + reg_losses)
 
-    x_train = x_train.astype('float32') / 255.
-    x_test = x_test.astype('float32') / 255.
-    x_train = np.reshape(x_train, (len(x_train), 28, 28, 1))    # adapt this if using 'channels_first' image data format
-    x_test = np.reshape(x_test, (len(x_test), 28, 28, 1))       # adapt this if using 'channels_first' image data format
+    optimizer = tf.train.AdamOptimizer(learning_rate)
+    training_op = optimizer.minimize(loss)
 
-    # open a terminal and start TensorBoard to read logs in the autoencoder subdirectory
-    # tensorboard --logdir=autoencoder
+    init = tf.global_variables_initializer()
 
-    autoencoder.fit(x_train, x_train, epochs=50, batch_size=128, shuffle=True, validation_data=(x_test, x_test),
-                    callbacks=[TensorBoard(log_dir='conv_autoencoder')], verbose=2)
+    n_epochs = 5
+    batch_size = 150
+    withtf.Session()
+    assess: init.run()
+    for epoch in range(n_epochs):
+        n_batches = mnist.train.num_examples // batch_size
+        for iteration in range(n_batches):
+            X_batch, y_batch = mnist.train.next_batch(batch_size)
+            sess.run(training_op, feed_dict={X: X_batch})
 
-    # take a look at the reconstructed digits
-    decoded_imgs = autoencoder.predict(x_test)
 
-    n = 10
-    plt.figure(figsize=(10, 4), dpi=100)
-    for i in range(n):
-        # display original
-        ax = plt.subplot(2, n, i + 1)
-        plt.imshow(x_test[i].reshape(28, 28))
-        plt.gray()
-        ax.set_axis_off()
 
-        # display reconstruction
-        ax = plt.subplot(2, n, i + n + 1)
-        plt.imshow(decoded_imgs[i].reshape(28, 28))
-        plt.gray()
-        ax.set_axis_off()
-
-    plt.show()
-
-    # take a look at the 128-dimensional encoded representation
-    # these representations are 8x4x4, so we reshape them to 4x32 in order to be able to display them as grayscale images
-
-    encoder = Model(input_img, encoded)
-    encoded_imgs = encoder.predict(x_test)
-
-    # save latent space features 128-d vector
-    pickle.dump(encoded_imgs, open('conv_autoe_features.pickle', 'wb'))
-
-    n = 10
-    plt.figure(figsize=(10, 4), dpi=100)
-    for i in range(n):
-        ax = plt.subplot(1, n, i + 1)
-        plt.imshow(encoded_imgs[i].reshape(4, 4 * 8).T)
-        plt.gray()
-        ax.set_axis_off()
-
-    plt.show()
-
-    K.clear_session()
