@@ -22,6 +22,21 @@ def get_mnist_data():
     print("Retrieved MNIST data")
     return train_data, test_data, m
 
+def plot_reconstructions(originals, reconstructions):
+    plt.figure(figsize=(10, 4), dpi=100)
+    for i in range(10):
+        # display original
+        ax = plt.subplot(2, 10, i + 1)
+        plt.imshow(originals[i].reshape(28, 28))
+        plt.gray()
+        ax.set_axis_off()
+        # display reconstruction
+        ax = plt.subplot(2, 10, i + 10 + 1)
+        plt.imshow(reconstructions[i].reshape(28, 28))
+        plt.gray()
+        ax.set_axis_off()
+    plt.show()
+
 if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
@@ -64,7 +79,6 @@ if __name__ == '__main__':
         for epoch in range(n_epochs):
             print("Epoch:", epoch, "/", n_epochs)
             n_batches = m//batch_size
-            #n_batches = mnist.train.num_examples
             for batch in range(n_batches):
                 X_batch = train_data[batch*batch_size: (batch + 1)*batch_size]
                 sess.run(training_op, feed_dict={X: X_batch})
@@ -74,18 +88,4 @@ if __name__ == '__main__':
 
     print(reconstructions.shape)
 
-    plt.figure(figsize=(10, 4), dpi=100)
-    for i in range(10):
-        # display original
-        ax = plt.subplot(2, 10, i + 1)
-        plt.imshow(test_data[i].reshape(28, 28))
-        plt.gray()
-        ax.set_axis_off()
-
-        # display reconstruction
-        ax = plt.subplot(2, 10, i + 10 + 1)
-        plt.imshow(reconstructions[i].reshape(28, 28))
-        plt.gray()
-        ax.set_axis_off()
-
-    plt.show()
+    plot_reconstructions(test_data[0: 10], reconstructions)
