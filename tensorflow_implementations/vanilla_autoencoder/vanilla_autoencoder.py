@@ -85,7 +85,4 @@ if __name__ == '__main__':
 
         reconstructions = outputs.eval(feed_dict={X: test_data[0: 10]})
 
-
-    print(reconstructions.shape)
-
     plot_reconstructions(test_data[0: 10], reconstructions)
