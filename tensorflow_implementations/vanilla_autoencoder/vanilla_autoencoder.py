@@ -1,29 +1,28 @@
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D
-from tensorflow.keras.models import Model
-from tensorflow.keras.datasets import mnist
-from tensorflow.keras.callbacks import TensorBoard
-from tensorflow.keras import backend as K
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import pickle
 
 import tensorflow as tf
 from functools import partial
 
-#import mnist
 from sklearn.datasets import fetch_openml
 
 mnist = fetch_openml('mnist_784', version=1, cache=True)
 
 data, labels = mnist["data"], mnist["target"]
-m = data.shape[0]
+
+train_indices = np.random.permutation(70000)
+
+test_data = data[train_indices[:70000//5]]
+train_data = data[train_indices[70000//5:]]
+
+m = train_data.shape[0]
 
 print(m)
-print(data.shape)
+print(train_data.shape)
 print(labels.shape)
 
-some_digit = data[36000]
+some_digit = train_data[36000]
 some_digit_image = some_digit.reshape(28,28)
 plt.imshow(some_digit_image,cmap=matplotlib.cm.binary,interpolation="nearest")
 
@@ -72,10 +71,10 @@ if __name__ == '__main__':
             n_batches = m//batch_size
             #n_batches = mnist.train.num_examples
             for batch in range(n_batches):
-                X_batch, y_batch = data[batch*batch_size: (batch + 1)*batch_size], labels[batch*batch_size: (batch + 1)*batch_size]
+                X_batch, y_batch = train_data[batch*batch_size: (batch + 1)*batch_size], labels[batch*batch_size: (batch + 1)*batch_size]
                 sess.run(training_op, feed_dict={X: X_batch})
 
-        reconstructions = outputs.eval(feed_dict={X: data[0: 10]})
+        reconstructions = outputs.eval(feed_dict={X: test_data[0: 10]})
 
 
     print(reconstructions.shape)
@@ -84,7 +83,7 @@ if __name__ == '__main__':
     for i in range(10):
         # display original
         ax = plt.subplot(2, 10, i + 1)
-        plt.imshow(data[i].reshape(28, 28))
+        plt.imshow(test_data[i].reshape(28, 28))
         plt.gray()
         ax.set_axis_off()
 
