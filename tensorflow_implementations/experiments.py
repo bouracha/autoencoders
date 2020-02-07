@@ -26,7 +26,7 @@ if __name__ == '__main__':
             print("Number of Epochs = " + str(num_epochs))
             for epoch in range(num_epochs):
                 #print(str(vid_num) + "/" + str(num_videos - 1), end="\r")
-                print(str(Epoch) + "/" + str(num_epochs), end="\r")
+                print(str(epoch) + "/" + str(num_epochs), end="\r")
                 n_batches = m//batch_size
                 for batch in range(n_batches):
                     X_batch = train_data[batch*batch_size: (batch + 1)*batch_size]
@@ -34,6 +34,8 @@ if __name__ == '__main__':
                 train_loss.append(model.loss.eval(session=sess, feed_dict={model.X: train_data}))
                 test_loss.append(model.loss.eval(session=sess, feed_dict={model.X: test_data}))
 
+            print("Train Loss: ", train_loss[-1])
+            print("Test Loss: ", test_loss[-1])
             reconstructions = model.outputs.eval(feed_dict={model.X: test_data[0: 10]})
 
         experimental_tasks1.append(((num_epochs, l2_reg), train_loss, test_loss))
