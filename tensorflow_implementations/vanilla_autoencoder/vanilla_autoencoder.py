@@ -4,25 +4,8 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from functools import partial
 
-from sklearn.datasets import fetch_openml
-
 from home.pn.PycharmProjects.autoencoders.helper_functions import *
 
-
-def get_mnist_data():
-    print("Getting MNIST data..")
-    mnist = fetch_openml('mnist_784', version=1, cache=True)
-    data, labels = mnist["data"], mnist["target"]
-
-    train_indices = np.random.permutation(70000)
-
-    test_data = data[train_indices[:70000 // 5]]
-    train_data = data[train_indices[70000 // 5:]]
-
-    m = train_data.shape[0]
-
-    print("Retrieved MNIST data")
-    return train_data, test_data, m
 
 def plot_reconstructions(originals, reconstructions):
     plt.figure(figsize=(10, 4), dpi=100)

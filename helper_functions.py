@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.datasets import fetch_openml
 
 def test_set_check(identifier, test_ratio, hash):
     return hash(np.int64(identifier)).digest()[-1] < 256*test_ratio
@@ -42,6 +43,22 @@ def y_to_onehot(y):
 # Global variables.
 log_period_samples = 20000
 batch_size = 100
+
+def get_mnist_data():
+    print("Getting MNIST data..")
+    mnist = fetch_openml('mnist_784', version=1, cache=True)
+    data, labels = mnist["data"], mnist["target"]
+
+    train_indices = np.random.permutation(70000)
+
+    test_data = data[train_indices[:70000 // 5]]
+    train_data = data[train_indices[70000 // 5:]]
+
+    m = train_data.shape[0]
+
+    print("Retrieved MNIST data")
+    return train_data, test_data, m
+
 
 # Import dataset with one-hot encoding of the class labels.
 def get_data():
