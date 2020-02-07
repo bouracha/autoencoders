@@ -41,26 +41,22 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    n_inputs = 28 * 28  # for MNIST
-    n_hidden1 = 300
-    n_hidden2 = 150
-    n_hidden3 = n_hidden1
-    n_outputs = n_inputs
+    n = 28 * 28  # for MNIST
 
     learning_rate = 0.01
     l2_reg = 0.0001
 
-    X = tf.placeholder(tf.float32, shape=[None, n_inputs])
+    X = tf.placeholder(tf.float32, shape=[None, n])
 
     he_init = tf.contrib.layers.variance_scaling_initializer()
     l2_regularizer = tf.contrib.layers.l2_regularizer(l2_reg)
     ## Partial allows to use the function my_dense_layer with same set parameters each time
     my_dense_layer = partial(tf.layers.dense, activation=tf.nn.elu, kernel_initializer=he_init, kernel_regularizer=l2_regularizer)
 
-    hidden1 = my_dense_layer(X, n_hidden1)
-    hidden2 = my_dense_layer(hidden1, n_hidden2)
-    hidden3 = my_dense_layer(hidden2, n_hidden3)
-    outputs = my_dense_layer(hidden3, n_outputs, activation=None) ##Overwrite: no activation fn in last layer
+    hidden1 = my_dense_layer(X, 300)
+    hidden2 = my_dense_layer(hidden1, 150)
+    hidden3 = my_dense_layer(hidden2, 300)
+    outputs = my_dense_layer(hidden3, n, activation=None) ##Overwrite: no activation fn in last layer
 
     reconstruction_loss = tf.reduce_mean(tf.square(outputs - X))  # MSE
 
