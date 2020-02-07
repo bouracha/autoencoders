@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
         #Train
         train_loss, test_loss = [], []
-        batch_size = 150
+        batch_size = 1500
         with tf.Session()   as sess:
             init.run()
             train_loss.append(model.loss.eval(session=sess, feed_dict={model.X: train_data}))
