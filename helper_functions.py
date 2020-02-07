@@ -59,6 +59,22 @@ def get_mnist_data():
     print("Retrieved MNIST data")
     return train_data, test_data, m
 
+def plot_reconstructions(originals, reconstructions):
+    """ Arguments: list of 10 28x28 grayscale images, originals"""
+    """            the reconstructions same as above """
+    plt.figure(figsize=(10, 4), dpi=100)
+    for i in range(10):
+        # display original
+        ax = plt.subplot(2, 10, i + 1)
+        plt.imshow(originals[i].reshape(28, 28))
+        plt.gray()
+        ax.set_axis_off()
+        # display reconstruction
+        ax = plt.subplot(2, 10, i + 10 + 1)
+        plt.imshow(reconstructions[i].reshape(28, 28))
+        plt.gray()
+        ax.set_axis_off()
+    plt.show()
 
 # Import dataset with one-hot encoding of the class labels.
 def get_data():
