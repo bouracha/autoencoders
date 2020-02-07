@@ -82,3 +82,42 @@ class AUTOENCODER_50(object):
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate)
         self.training_op = self.optimizer.minimize(self.loss)
+
+class tied_AUTOENCODER_300_150_300(object):
+
+    def __init__(self):
+        n = 28 * 28  # for MNIST
+
+        learning_rate = 0.01
+        l2_reg = 0.0001
+
+        activation = tf.nn.elu
+        initializer = tf.contrib.layers.variance_scaling_initializer()
+        l2_regularizer = tf.contrib.layers.l2_regularizer(l2_reg)
+
+        self.X = tf.placeholder(tf.float32, shape=[None, n])
+
+        weights1_init = initializer([n, 300])
+        weights2_init = initializer([300, 150])
+
+        self.weights1 = tf.Variable(weights1_init, dtype=tf.float32, name="weights1")
+        self.weights2 = tf.Variable(weights2_init, dtype=tf.float32, name="weights2")
+        self.weights3 = tf.transpose(self.weights2, name="weights3")  # tied weights
+        self.weights4 = tf.transpose(self.weights1, name="weights4")# tied weights
+
+        self.biases1 = tf.Variable(tf.zeros(300), name="biases1")
+        self.biases2 = tf.Variable(tf.zeros(150), name="biases2")
+        self.biases3 = tf.Variable(tf.zeros(300), name="biases3")
+        self.biases4 = tf.Variable(tf.zeros(n), name="biases4")
+
+        self.hidden1 = activation(tf.matmul(self.X, self.weights1) + self.biases1)
+        self.hidden2 = activation(tf.matmul(self.hidden1, self.weights2) + self.biases2)
+        self.hidden3 = activation(tf.matmul(self.hidden2, self.weights3) + self.biases3)
+        self.outputs = tf.matmul(self.hidden3, self.weights4) + self.biases4
+
+        self.reconstruction_loss = tf.reduce_mean(tf.square(self.outputs - self.X))  # MSE
+        self.reg_losses = l2_regularizer(self.weights1) + l2_regularizer(self.weights2)
+        self.loss = self.reconstruction_loss + self.reg_losses
+
+        self.optimizer = tf.train.AdamOptimizer(learning_rate)
+        self.training_op = self.optimizer.minimize(self.loss)

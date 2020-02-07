@@ -1,18 +1,20 @@
 import tensorflow as tf
 from autoencoders.vanilla_autoencoders import AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import AUTOENCODER_150
+from autoencoders.vanilla_autoencoders import AUTOENCODER_50
+from autoencoders.vanilla_autoencoders import tied_AUTOENCODER_300_150_300
 
 from home.pn.PycharmProjects.autoencoders.helper_functions import *
 
 if __name__ == '__main__':
 
     experimental_tasks1 = []
-    settings = [(5, 0.0001), (20, 0.0001), (50, 0.0001)]
+    settings = [(5, 0.0001), (20, 0.0003), (50, 0.001)]
     train_data, test_data, m = get_mnist_data()
 
     for (num_epochs, l2_reg) in settings:
 
-        model = AUTOENCODER_150()
+        model = tied_AUTOENCODER_300_150_300()
 
         init = tf.global_variables_initializer()
 
@@ -25,7 +27,6 @@ if __name__ == '__main__':
             test_loss.append(model.loss.eval(session=sess, feed_dict={model.X: test_data}))
             print("Number of Epochs = " + str(num_epochs))
             for epoch in range(num_epochs):
-                #print(str(vid_num) + "/" + str(num_videos - 1), end="\r")
                 print(str(epoch) + "/" + str(num_epochs), end="\r")
                 n_batches = m//batch_size
                 for batch in range(n_batches):
