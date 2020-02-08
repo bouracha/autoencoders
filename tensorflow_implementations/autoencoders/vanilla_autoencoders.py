@@ -3,18 +3,17 @@ from functools import partial
 
 class AUTOENCODER_300_150_300(object):
 
-    def __init__(self):
+    def __init__(self, l2_reg):
         n = 28 * 28  # for MNIST
 
         learning_rate = 0.01
-        l2_reg = 0.0001
 
         self.X = tf.placeholder(tf.float32, shape=[None, n])
 
         self.he_init = tf.contrib.layers.variance_scaling_initializer()
-        self.l2_regularizer = tf.contrib.layers.l2_regularizer(l2_reg)
+        #self.l2_regularizer = tf.contrib.layers.l2_regularizer(l2_reg)
         ## Partial allows to use the function my_dense_layer with same set parameters each time
-        self.my_dense_layer = partial(tf.layers.dense, activation=tf.nn.elu, kernel_initializer=self.he_init, kernel_regularizer=self.l2_regularizer)
+        self.my_dense_layer = partial(tf.layers.dense, activation=tf.nn.elu, kernel_initializer=self.he_init)
 
         self.hidden1 = self.my_dense_layer(self.X, 300)
         self.hidden2 = self.my_dense_layer(self.hidden1, 150)
@@ -23,8 +22,8 @@ class AUTOENCODER_300_150_300(object):
 
         self.reconstruction_loss = tf.reduce_mean(tf.square(self.outputs - self.X))  # MSE
 
-        self.reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        self.loss = tf.add_n([self.reconstruction_loss] + self.reg_losses)
+        #self.reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+        self.loss = self.reconstruction_loss#tf.add_n([self.reconstruction_loss] + self.reg_losses)
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate)
         self.training_op = self.optimizer.minimize(self.loss)
@@ -32,11 +31,10 @@ class AUTOENCODER_300_150_300(object):
 
 class AUTOENCODER_150(object):
 
-    def __init__(self):
+    def __init__(self, l2_reg):
         n = 28 * 28  # for MNIST
 
         learning_rate = 0.01
-        l2_reg = 0.0001
 
         self.X = tf.placeholder(tf.float32, shape=[None, n])
 
@@ -59,11 +57,10 @@ class AUTOENCODER_150(object):
 
 class AUTOENCODER_50(object):
 
-    def __init__(self):
+    def __init__(self, l2_reg):
         n = 28 * 28  # for MNIST
 
         learning_rate = 0.01
-        l2_reg = 0.0001
 
         self.X = tf.placeholder(tf.float32, shape=[None, n])
 
@@ -85,11 +82,10 @@ class AUTOENCODER_50(object):
 
 class tied_AUTOENCODER_300_150_300(object):
 
-    def __init__(self):
+    def __init__(self, l2_reg):
         n = 28 * 28  # for MNIST
 
         learning_rate = 0.01
-        l2_reg = 0.0001
 
         activation = tf.nn.elu
         initializer = tf.contrib.layers.variance_scaling_initializer()
