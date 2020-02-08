@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     for (num_epochs, l2_reg) in settings:
 
-        model = tied_AUTOENCODER_300_150_300()
+        model = tied_AUTOENCODER_300_150_300(l2_reg = 0.0001)
 
         init = tf.global_variables_initializer()
 
