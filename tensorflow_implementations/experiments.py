@@ -5,6 +5,7 @@ from autoencoders.vanilla_autoencoders import AUTOENCODER_50
 from autoencoders.vanilla_autoencoders import tied_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import denoising_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import sparse_AUTOENCODER_300_150_300
+from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_20
 
 from home.pn.PycharmProjects.autoencoders.helper_functions import *
 
@@ -16,7 +17,7 @@ if __name__ == '__main__':
 
     num_epochs = 5
 
-    model = sparse_AUTOENCODER_300_150_300()
+    model = VARIATIONAL_AUTOENCODER_500_500_20()
 
     init = tf.global_variables_initializer()
 
