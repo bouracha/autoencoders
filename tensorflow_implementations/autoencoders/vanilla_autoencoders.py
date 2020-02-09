@@ -192,8 +192,8 @@ class VARIATIONAL_AUTOENCODER_500_500_20(object):
 
     def __init__(self):
         n = 28 * 28  # for MNIST
-        n_hidden1 = 500
-        n_hidden2 = 500
+        n_hidden1 = 2000
+        n_hidden2 = 3000
         n_hidden3 = 20  # codings
         n_hidden4 = n_hidden2
         n_hidden5 = n_hidden1
@@ -210,20 +210,21 @@ class VARIATIONAL_AUTOENCODER_500_500_20(object):
         self.hidden1 = self.my_dense_layer(self.X, n_hidden1)
         self.hidden2 = self.my_dense_layer(self.hidden1, n_hidden2)
 
-        self.hidden3_mean = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
-        self.hidden3_gamma = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
-        self.noise = tf.random_normal(tf.shape(self.hidden3_gamma), dtype=tf.float32)
-        self.hidden3 = self.hidden3_mean + tf.exp(0.5*self.hidden3_gamma)*self.noise
+        #self.hidden3_mean = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
+        #self.hidden3_gamma = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
+        #self.noise = tf.random_normal(tf.shape(self.hidden3_gamma), dtype=tf.float32)
+        #self.hidden3 = self.hidden3_mean + tf.exp(0.5*self.hidden3_gamma)*self.noise
+        self.hidden3 = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
 
         self.hidden4 = self.my_dense_layer(self.hidden3, n_hidden4)
         self.hidden5 = self.my_dense_layer(self.hidden4, n_hidden5)
         self.logits = self.my_dense_layer(self.hidden5, n, activation=None)
-        self.outputs = tf.sigmoid(self.logits)
+        self.outputs = self.logits # tf.sigmoid(self.logits)
 
-        self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.X, logits=self.logits)
-        self.reconstruction_loss = tf.reduce_sum(self.xentropy)
-        self.latent_loss = 0.5*tf.reduce_sum(tf.exp(self.hidden3_gamma) + tf.square(self.hidden3_mean) - 1 - self.hidden3_gamma)
-        self.loss = self.reconstruction_loss + self.latent_loss
+        #self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.X, logits=self.logits)
+        self.reconstruction_loss = tf.reduce_mean(tf.square(self.logits - self.X)) #tf.reduce_sum(self.xentropy)
+        #self.latent_loss = 0.5*tf.reduce_sum(tf.exp(self.hidden3_gamma) + tf.square(self.hidden3_mean) - 1 - self.hidden3_gamma)
+        self.loss = self.reconstruction_loss# + self.latent_loss
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate)
         self.training_op = self.optimizer.minimize(self.loss)

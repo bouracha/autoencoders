@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 5
+    num_epochs = 100
 
     model = VARIATIONAL_AUTOENCODER_500_500_20()
 
@@ -50,4 +50,5 @@ if __name__ == '__main__':
     plt.legend()
 
     plot_reconstructions(test_data[0: 10], reconstructions)
+    print(test_loss)
 
