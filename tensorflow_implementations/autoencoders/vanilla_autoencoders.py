@@ -210,6 +210,7 @@ class VARIATIONAL_AUTOENCODER_500_500_20(object):
         self.hidden1 = self.my_dense_layer(self.X, n_hidden1)
         self.hidden2 = self.my_dense_layer(self.hidden1, n_hidden2)
 
+        #TODO: Implement the variational aspect with MSE reconstruction loss then try to figure out the cross entropy issue
         #self.hidden3_mean = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
         #self.hidden3_gamma = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
         #self.noise = tf.random_normal(tf.shape(self.hidden3_gamma), dtype=tf.float32)
