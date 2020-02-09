@@ -185,3 +185,41 @@ class sparse_AUTOENCODER_300_150_300(object):
     def kl_divergence(self, q):
         p = self.sparsity_target
         return p * tf.log(p / q) + (1 - p) * tf.log((1 - p) / (1 - q))
+
+
+
+class AUTOENCODER_300_150_300(object):
+
+    def __init__(self, l2_reg):
+        n = 28 * 28  # for MNIST
+        n_hidden1 = 500
+        n_hidden2 = 500
+        n_hidden3 = 20  # codings
+        n_hidden4 = n_hidden2
+        n_hidden5 = n_hidden1
+        n_outputs = n_inputs
+
+        learning_rate = 0.001
+
+        self.X = tf.placeholder(tf.float32, shape=[None, n])
+
+        self.he_init = tf.contrib.layers.variance_scaling_initializer()
+        ## Partial allows to use the function my_dense_layer with same set parameters each time
+        self.my_dense_layer = partial(tf.layers.dense, activation=tf.nn.elu, kernel_initializer=self.he_init)
+
+        self.hidden1 = self.my_dense_layer(self.X, n_hidden1)
+        self.hidden2 = self.my_dense_layer(self.hidden1, n_hidden2)
+
+        self.hidden3_mean = my_dense_layer(self.hidden2, n_hidden3, activation=None)
+        self.hidden3_gamma = my_dense_layer(self.hidden2, n_hidden3, activation=None)
+        self.hidden3 = self.hidden3_mean + tf.exp(0.5*hidden3_gamma)*noise #####TODO:continue here
+
+        self.outputs = self.my_dense_layer(self.hidden3, n, activation=None)  ##Overwrite: no activation fn in last layer
+
+        self.reconstruction_loss = tf.reduce_mean(tf.square(self.outputs - self.X))  # MSE
+
+        #self.reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+        self.loss = self.reconstruction_loss#tf.add_n([self.reconstruction_loss] + self.reg_losses)
+
+        self.optimizer = tf.train.AdamOptimizer(learning_rate)
+        self.training_op = self.optimizer.minimize(self.loss)
