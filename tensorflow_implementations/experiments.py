@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 10
+    num_epochs = 50
 
     model = VARIATIONAL_AUTOENCODER_500_500_20()
 
@@ -45,7 +45,9 @@ if __name__ == '__main__':
             print("Train Loss: ", train_loss[-1])
             print("Test Loss: ", test_loss[-1])
             reconstructions = model.outputs.eval(feed_dict={model.X: test_data[0: 10]})
+            xentropy_loss = model.reconstruction_loss_xentropy.eval(session=sess, feed_dict={model.X: test_data})
             MSE_loss = model.reconstruction_loss_MSE.eval(session=sess, feed_dict={model.X: test_data})
+            print("XEntropy Loss: ", xentropy_loss)
             print("MSE Loss: ", MSE_loss)
 
     plt.plot(train_loss, label='Train Loss')

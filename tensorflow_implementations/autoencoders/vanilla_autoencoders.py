@@ -245,10 +245,10 @@ class VARIATIONAL_AUTOENCODER_500_500_20(object):
         self.outputs = self.logits
 
         #Loss Function
-        self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.sigmoid_X, logits=self.logits)
-        self.reconstruction_loss = tf.reduce_mean(self.xentropy)
+        self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.sigmoid_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
+        self.reconstruction_loss_xentropy = tf.reduce_mean(self.xentropy)
         self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.logits - self.X))
-        self.loss = self.reconstruction_loss
+        self.loss = self.reconstruction_loss_xentropy
 
         #Optimiser
         self.optimizer = tf.train.AdamOptimizer(learning_rate)
