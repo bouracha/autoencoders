@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 50
+    num_epochs = 10
 
     model = VARIATIONAL_AUTOENCODER_500_500_20()
 
@@ -51,15 +51,16 @@ if __name__ == '__main__':
         codings_rnd = np.random.normal(size=[60, model.n_hidden3])
         outputs_val = model.outputs.eval(feed_dict={model.encoded: codings_rnd})
 
-    plt.plot(train_loss, label='Train Loss')
-    plt.plot(test_loss, label='Test Loss')
+    plt.plot(train_loss[-15:], label='Train Loss')
+    plt.plot(test_loss[-15:], label='Test Loss')
     plt.xlabel('Number of Epochs')
     plt.ylabel('Reconstruction Loss')
     plt.title(' Learning Curves')
     plt.legend()
 
     plot_reconstructions(test_data[0: 10], reconstructions)
-    print(test_loss)
+    print('Train Loss list: ', train_loss[-15:])
+    print('Test loss list', test_loss[-15:])
 
     plt.figure(figsize=(10, 4), dpi=100)
     for i in range(10):

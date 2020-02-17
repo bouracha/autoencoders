@@ -194,7 +194,8 @@ class AUTOENCODER_500_500_20(object):
         self.outputs = self.logits
 
         #Loss Function
-        self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.normalised_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
+        #self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.normalised_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
+        self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.normalised_X, logits=self.logits)
         self.reconstruction_loss_xentropy = tf.reduce_mean(self.xentropy)
         self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.logits - self.X))
         self.loss = self.reconstruction_loss_xentropy
@@ -212,7 +213,7 @@ class VARIATIONAL_AUTOENCODER_500_500_20(object):
         n_hidden1 = 500
         n_hidden2 = 500
         #Encoded Layer
-        self.n_hidden3 = 20
+        self.n_hidden3 = 30
         #Decoding Layers
         n_hidden4 = n_hidden2
         n_hidden5 = n_hidden1
@@ -265,11 +266,12 @@ class VARIATIONAL_AUTOENCODER_500_500_20(object):
         self.outputs = self.logits
 
         #Loss Function
-        self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.normalised_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
+        #self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.normalised_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
+        self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.normalised_X, logits=self.logits)
         self.reconstruction_loss_xentropy = tf.reduce_mean(self.xentropy)
         self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.logits - self.X))
         self.latent_loss = 0.5*tf.reduce_mean(tf.exp(self.encoded_gamma) + tf.square(self.encoded_mean) - 1 - self.encoded_gamma)
-        self.loss = self.reconstruction_loss_MSE + self.latent_loss
+        self.loss = self.reconstruction_loss_xentropy + 0.1*self.latent_loss
 
         #Optimiser
         self.optimizer = tf.train.AdamOptimizer(learning_rate)
