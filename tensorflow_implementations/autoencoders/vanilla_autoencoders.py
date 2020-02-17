@@ -29,57 +29,6 @@ class AUTOENCODER_300_150_300(object):
         self.training_op = self.optimizer.minimize(self.loss)
 
 
-class AUTOENCODER_150(object):
-
-    def __init__(self, l2_reg):
-        n = 28 * 28  # for MNIST
-
-        learning_rate = 0.01
-
-        self.X = tf.placeholder(tf.float32, shape=[None, n])
-
-        self.he_init = tf.contrib.layers.variance_scaling_initializer()
-        self.l2_regularizer = tf.contrib.layers.l2_regularizer(l2_reg)
-        ## Partial allows to use the function my_dense_layer with same set parameters each time
-        self.my_dense_layer = partial(tf.layers.dense, activation=tf.nn.elu, kernel_initializer=self.he_init, kernel_regularizer=self.l2_regularizer)
-
-        self.hidden = self.my_dense_layer(self.X, 150)
-        self.outputs = self.my_dense_layer(self.hidden, n)  ##Overwrite: no activation fn in last layer
-
-        self.reconstruction_loss = tf.reduce_mean(tf.square(self.outputs - self.X))  # MSE
-
-        self.reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        self.loss = tf.add_n([self.reconstruction_loss] + self.reg_losses)
-
-        self.optimizer = tf.train.AdamOptimizer(learning_rate)
-        self.training_op = self.optimizer.minimize(self.loss)
-
-
-class AUTOENCODER_50(object):
-
-    def __init__(self, l2_reg):
-        n = 28 * 28  # for MNIST
-
-        learning_rate = 0.01
-
-        self.X = tf.placeholder(tf.float32, shape=[None, n])
-
-        self.he_init = tf.contrib.layers.variance_scaling_initializer()
-        self.l2_regularizer = tf.contrib.layers.l2_regularizer(l2_reg)
-        ## Partial allows to use the function my_dense_layer with same set parameters each time
-        self.my_dense_layer = partial(tf.layers.dense, activation=tf.nn.elu, kernel_initializer=self.he_init, kernel_regularizer=self.l2_regularizer)
-
-        self.hidden = self.my_dense_layer(self.X, 50)
-        self.outputs = self.my_dense_layer(self.hidden, n)  ##Overwrite: no activation fn in last layer
-
-        self.reconstruction_loss = tf.reduce_mean(tf.square(self.outputs - self.X))  # MSE
-
-        self.reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        self.loss = tf.add_n([self.reconstruction_loss] + self.reg_losses)
-
-        self.optimizer = tf.train.AdamOptimizer(learning_rate)
-        self.training_op = self.optimizer.minimize(self.loss)
-
 class tied_AUTOENCODER_300_150_300(object):
 
     def __init__(self, l2_reg):
@@ -301,8 +250,8 @@ class VARIATIONAL_AUTOENCODER_500_500_20(object):
         self.biases6 = tf.Variable(tf.zeros(n), name="biases6")
 
         #Encoding Operations
-        self.sigmoid_X = tf.sigmoid(self.X)
-        self.encoder_hidden1 = activation(tf.matmul(self.sigmoid_X, self.weights1) + self.biases1)
+        self.normalised_X = (self.X - tf.reduce_min(self.X))/(tf.reduce_max(self.X) - tf.reduce_min(self.X))
+        self.encoder_hidden1 = activation(tf.matmul(self.normalised_X, self.weights1) + self.biases1)
         self.encoder_hidden2 = activation(tf.matmul(self.encoder_hidden1, self.weights2) + self.biases2)
         #Encoded Layer
         self.encoded_mean = tf.matmul(self.encoder_hidden2, self.weights3) + self.biases3
@@ -316,7 +265,7 @@ class VARIATIONAL_AUTOENCODER_500_500_20(object):
         self.outputs = self.logits
 
         #Loss Function
-        self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.sigmoid_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
+        self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.normalised_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
         self.reconstruction_loss_xentropy = tf.reduce_mean(self.xentropy)
         self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.logits - self.X))
         self.latent_loss = 0.5*tf.reduce_mean(tf.exp(self.encoded_gamma) + tf.square(self.encoded_mean) - 1 - self.encoded_gamma)
@@ -326,54 +275,4 @@ class VARIATIONAL_AUTOENCODER_500_500_20(object):
         self.optimizer = tf.train.AdamOptimizer(learning_rate)
         self.training_op = self.optimizer.minimize(self.loss)
 
-
-
-
-class VARIATIONAL_AUTOENCODER_500_500_20_original(object):
-
-    def __init__(self):
-        n = 28 * 28  # for MNIST
-        # Encoding Layers
-        n_hidden1 = 500
-        n_hidden2 = 500
-        # Encoded Layer
-        n_hidden3 = 20
-        # Decoding Layers
-        n_hidden4 = n_hidden2
-        n_hidden5 = n_hidden1
-
-        learning_rate = 0.001
-
-        activation = tf.nn.elu
-        initializer = tf.contrib.layers.variance_scaling_initializer()
-
-        self.X = tf.placeholder(tf.float32, shape=[None, n])
-        self.sigmoid_X = tf.sigmoid(self.X)
-
-        ## Partial allows to use the function my_dense_layer with same set parameters each time
-        self.my_dense_layer = partial(tf.layers.dense, activation=tf.nn.elu, kernel_initializer=initializer)
-
-        self.hidden1 = self.my_dense_layer(self.sigmoid_X, n_hidden1)
-        self.hidden2 = self.my_dense_layer(self.hidden1, n_hidden2)
-
-       ##TODO: Implement the variational aspect with MSE reconstruction loss then try to figure out the cross entropy issue
-       ##self.hidden3_mean = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
-       ##self.hidden3_gamma = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
-       ##self.noise = tf.random_normal(tf.shape(self.hidden3_gamma), dtype=tf.float32)
-       ##self.hidden3 = self.hidden3_mean + tf.exp(0.5*self.hidden3_gamma)*self.noise
-        self.hidden3 = self.my_dense_layer(self.hidden2, n_hidden3, activation=None)
-
-        self.hidden4 = self.my_dense_layer(self.hidden3, n_hidden4)
-        self.hidden5 = self.my_dense_layer(self.hidden4, n_hidden5)
-        self.logits = self.my_dense_layer(self.hidden5, n, activation=None)
-        self.outputs = self.logits # tf.sigmoid(self.logits)
-
-        self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.sigmoid_X, logits=self.logits)
-        self.reconstruction_loss = tf.reduce_mean(self.xentropy)
-        #self.reconstruction_loss = tf.reduce_mean(tf.square(self.logits - self.X))
-        #self.latent_loss = 0.5*tf.reduce_sum(tf.exp(self.hidden3_gamma) + tf.square(self.hidden3_mean) - 1 - self.hidden3_gamma)
-        self.loss = self.reconstruction_loss# + self.latent_loss
-
-        self.optimizer = tf.train.AdamOptimizer(learning_rate)
-        self.training_op = self.optimizer.minimize(self.loss)
 
