@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 50
+    num_epochs = 5
 
     model = VARIATIONAL_AUTOENCODER_500_500_20()
 
@@ -65,6 +65,7 @@ if __name__ == '__main__':
     print(test_loss)
 
 
-    for iteration in range(60):
-        plt.subplot(60,10,iteration+1)
-        plot_image(outputs_val[iteration])
+    for i in range(60):
+        plt.subplot(60, 10, i+1)
+        plt.imshow(outputs_val[i].reshape(28, 28))
+        plt.gray()
