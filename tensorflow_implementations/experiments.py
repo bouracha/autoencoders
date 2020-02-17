@@ -1,4 +1,6 @@
 import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
 from autoencoders.vanilla_autoencoders import AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import AUTOENCODER_150
 from autoencoders.vanilla_autoencoders import AUTOENCODER_50
@@ -27,28 +29,30 @@ if __name__ == '__main__':
     train_loss, test_loss = [], []
     batch_size = 200
     final_losses = []
-    for i in range(0,1):
-        with tf.Session()   as sess:
-            init.run()
+    with tf.Session()   as sess:
+        init.run()
+        train_loss.append(model.loss.eval(session=sess, feed_dict={model.X: train_data}))
+        test_loss.append(model.loss.eval(session=sess, feed_dict={model.X: test_data}))
+        print("Number of Epochs = " + str(num_epochs))
+        for epoch in range(num_epochs):
+            print(str(epoch) + "/" + str(num_epochs), end="\r")
+            n_batches = m//batch_size
+            for batch in range(n_batches):
+                X_batch = train_data[batch*batch_size: (batch + 1)*batch_size]
+                sess.run(model.training_op, feed_dict={model.X: X_batch})
             train_loss.append(model.loss.eval(session=sess, feed_dict={model.X: train_data}))
             test_loss.append(model.loss.eval(session=sess, feed_dict={model.X: test_data}))
-            print("Number of Epochs = " + str(num_epochs))
-            for epoch in range(num_epochs):
-                print(str(epoch) + "/" + str(num_epochs), end="\r")
-                n_batches = m//batch_size
-                for batch in range(n_batches):
-                    X_batch = train_data[batch*batch_size: (batch + 1)*batch_size]
-                    sess.run(model.training_op, feed_dict={model.X: X_batch})
-                train_loss.append(model.loss.eval(session=sess, feed_dict={model.X: train_data}))
-                test_loss.append(model.loss.eval(session=sess, feed_dict={model.X: test_data}))
 
-            print("Train Loss: ", train_loss[-1])
-            print("Test Loss: ", test_loss[-1])
-            reconstructions = model.outputs.eval(feed_dict={model.X: test_data[0: 10]})
-            xentropy_loss = model.reconstruction_loss_xentropy.eval(session=sess, feed_dict={model.X: test_data})
-            MSE_loss = model.reconstruction_loss_MSE.eval(session=sess, feed_dict={model.X: test_data})
-            print("XEntropy Loss: ", xentropy_loss)
-            print("MSE Loss: ", MSE_loss)
+        print("Train Loss: ", train_loss[-1])
+        print("Test Loss: ", test_loss[-1])
+        reconstructions = model.outputs.eval(feed_dict={model.X: test_data[0: 10]})
+        xentropy_loss = model.reconstruction_loss_xentropy.eval(session=sess, feed_dict={model.X: test_data})
+        MSE_loss = model.reconstruction_loss_MSE.eval(session=sess, feed_dict={model.X: test_data})
+        print("XEntropy Loss: ", xentropy_loss)
+        print("MSE Loss: ", MSE_loss)
+
+        codings_rnd = np.random.normal(size=[60, model.n_hidden3])
+        outputs_val = model.outputs.eval(feed_dict={model.encoded: codings_rnd})
 
     plt.plot(train_loss, label='Train Loss')
     plt.plot(test_loss, label='Test Loss')
@@ -60,3 +64,7 @@ if __name__ == '__main__':
     plot_reconstructions(test_data[0: 10], reconstructions)
     print(test_loss)
 
+
+    for iteration in range(60):
+        plt.subplot(60,10,iteration+1)
+        plot_image(outputs_val[iteration])
