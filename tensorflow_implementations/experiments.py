@@ -7,6 +7,7 @@ from autoencoders.vanilla_autoencoders import AUTOENCODER_50
 from autoencoders.vanilla_autoencoders import tied_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import denoising_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import sparse_AUTOENCODER_300_150_300
+from autoencoders.vanilla_autoencoders import AUTOENCODER_500_500_20
 from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_20
 
 from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_20_original
@@ -19,9 +20,9 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 5
+    num_epochs = 50
 
-    model = VARIATIONAL_AUTOENCODER_500_500_20()
+    model = AUTOENCODER_500_500_20()
 
     init = tf.global_variables_initializer()
 
@@ -64,8 +65,10 @@ if __name__ == '__main__':
     plot_reconstructions(test_data[0: 10], reconstructions)
     print(test_loss)
 
-
-    for i in range(60):
-        plt.subplot(60, 10, i+1)
+    plt.figure(figsize=(10, 4), dpi=100)
+    for i in range(10):
+        ax = plt.subplot(2, 10, i + 1)
         plt.imshow(outputs_val[i].reshape(28, 28))
         plt.gray()
+        ax.set_axis_off()
+    plt.show()
