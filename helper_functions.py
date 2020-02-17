@@ -49,6 +49,7 @@ def get_mnist_data():
     mnist = fetch_openml('mnist_784', version=1, cache=True)
     data, labels = mnist["data"], mnist["target"]
 
+    np.random.seed(69)
     train_indices = np.random.permutation(70000)
 
     test_data = data[train_indices[:70000 // 5]]
