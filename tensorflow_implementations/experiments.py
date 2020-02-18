@@ -7,6 +7,7 @@ from autoencoders.vanilla_autoencoders import denoising_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import sparse_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import AUTOENCODER_500_500_20
 from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_200
+from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_2
 
 import sys
 sys.path.append("../")
@@ -18,9 +19,9 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 20
+    num_epochs = 10
 
-    model = VARIATIONAL_AUTOENCODER_500_500_200()
+    model = VARIATIONAL_AUTOENCODER_500_2()
 
     init = tf.global_variables_initializer()
 
@@ -50,7 +51,7 @@ if __name__ == '__main__':
         print("XEntropy Loss: ", xentropy_loss)
         print("MSE Loss: ", MSE_loss)
 
-        codings_rnd = np.random.normal(size=[60, model.n_hidden3])
+        codings_rnd = np.random.normal(size=[60, model.n_encoded])
         outputs_val = model.outputs.eval(feed_dict={model.encoded: codings_rnd})
 
     num_plot_points = np.abs(num_epochs - 10)
