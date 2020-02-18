@@ -6,9 +6,11 @@ from autoencoders.vanilla_autoencoders import tied_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import denoising_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import sparse_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import AUTOENCODER_500_500_20
-from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_20
+from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_200
 
-from home.pn.PycharmProjects.autoencoders.helper_functions import *
+import sys
+sys.path.append("../")
+from helper_functions import *
 
 import matplotlib.pyplot as plt
 
@@ -16,17 +18,17 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 10
+    num_epochs = 20
 
-    model = VARIATIONAL_AUTOENCODER_500_500_20()
+    model = VARIATIONAL_AUTOENCODER_500_500_200()
 
     init = tf.global_variables_initializer()
 
     #Train
     train_loss, test_loss = [], []
-    batch_size = 200
+    batch_size = 100
     final_losses = []
-    with tf.Session()   as sess:
+    with tf.Session() as sess:
         init.run()
         train_loss.append(model.loss.eval(session=sess, feed_dict={model.X: train_data}))
         test_loss.append(model.loss.eval(session=sess, feed_dict={model.X: test_data}))
@@ -51,21 +53,26 @@ if __name__ == '__main__':
         codings_rnd = np.random.normal(size=[60, model.n_hidden3])
         outputs_val = model.outputs.eval(feed_dict={model.encoded: codings_rnd})
 
-    plt.plot(train_loss[-15:], label='Train Loss')
-    plt.plot(test_loss[-15:], label='Test Loss')
+    num_plot_points = np.abs(num_epochs - 10)
+    plt.plot(train_loss[-num_plot_points:], label='Train Loss')
+    plt.plot(test_loss[-num_plot_points:], label='Test Loss')
     plt.xlabel('Number of Epochs')
     plt.ylabel('Reconstruction Loss')
     plt.title(' Learning Curves')
     plt.legend()
 
     plot_reconstructions(test_data[0: 10], reconstructions)
-    print('Train Loss list: ', train_loss[-15:])
-    print('Test loss list', test_loss[-15:])
+    print('Train Loss list: ', train_loss[-num_plot_points:])
+    print('Test loss list', test_loss[-num_plot_points:])
 
     plt.figure(figsize=(10, 4), dpi=100)
     for i in range(10):
         ax = plt.subplot(2, 10, i + 1)
         plt.imshow(outputs_val[i].reshape(28, 28))
+        plt.gray()
+        ax.set_axis_off()
+        ax = plt.subplot(2, 10, i + 10 + 1)
+        plt.imshow(outputs_val[i+10].reshape(28, 28))
         plt.gray()
         ax.set_axis_off()
     plt.show()
