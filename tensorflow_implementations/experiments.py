@@ -9,6 +9,8 @@ from autoencoders.vanilla_autoencoders import AUTOENCODER_500_500_20
 from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_200
 from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_2
 from autoencoders.vanilla_autoencoders import mixed_AUTOENCODER_500_2
+from autoencoders.vanilla_autoencoders import AUTOENCODER
+
 
 import sys
 sys.path.append("../")
@@ -20,9 +22,9 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 50
+    num_epochs = 20
 
-    model = mixed_AUTOENCODER_500_2()
+    model = VARIATIONAL_AUTOENCODER_500_500_200()
 
     init = tf.global_variables_initializer()
 
