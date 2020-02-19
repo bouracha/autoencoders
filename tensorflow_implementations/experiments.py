@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 10
+    num_epochs = 50
 
     model = VARIATIONAL_AUTOENCODER_500_2()
 
