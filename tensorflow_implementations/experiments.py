@@ -8,6 +8,7 @@ from autoencoders.vanilla_autoencoders import sparse_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import AUTOENCODER_500_500_20
 from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_200
 from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_2
+from autoencoders.vanilla_autoencoders import AUTOENCODER_500_2
 
 import sys
 sys.path.append("../")
@@ -19,9 +20,9 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 20
+    num_epochs = 50
 
-    model = VARIATIONAL_AUTOENCODER_500_500_200()
+    model = AUTOENCODER_500_2()
 
     init = tf.global_variables_initializer()
 
@@ -54,17 +55,16 @@ if __name__ == '__main__':
         codings_rnd = np.random.normal(size=[60, model.n_encoded])
         outputs_val = model.outputs.eval(feed_dict={model.encoded: codings_rnd})
 
-    num_plot_points = np.abs(num_epochs - 10)
-    plt.plot(train_loss[-num_plot_points:], label='Train Loss')
-    plt.plot(test_loss[-num_plot_points:], label='Test Loss')
+    plt.plot(train_loss, label='Train Loss')
+    plt.plot(test_loss, label='Test Loss')
     plt.xlabel('Number of Epochs')
     plt.ylabel('Reconstruction Loss')
     plt.title(' Learning Curves')
     plt.legend()
 
     plot_reconstructions(test_data[0: 10], reconstructions)
-    print('Train Loss list: ', train_loss[-num_plot_points:])
-    print('Test loss list', test_loss[-num_plot_points:])
+    print('Train Loss list: ', train_loss)
+    print('Test loss list', test_loss)
 
     plt.figure(figsize=(10, 4), dpi=100)
     for i in range(10):
