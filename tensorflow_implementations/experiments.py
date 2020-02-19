@@ -8,7 +8,7 @@ from autoencoders.vanilla_autoencoders import sparse_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import AUTOENCODER_500_500_20
 from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_200
 from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_2
-from autoencoders.vanilla_autoencoders import AUTOENCODER_500_2
+from autoencoders.vanilla_autoencoders import mixed_AUTOENCODER_500_2
 
 import sys
 sys.path.append("../")
@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     num_epochs = 50
 
-    model = AUTOENCODER_500_2()
+    model = mixed_AUTOENCODER_500_2()
 
     init = tf.global_variables_initializer()
 
