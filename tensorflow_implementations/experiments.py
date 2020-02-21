@@ -22,9 +22,9 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 20
+    num_epochs = 10
 
-    model = AUTOENCODER()
+    model = AUTOENCODER(variational=True)
 
     init = tf.global_variables_initializer()
 
@@ -57,8 +57,8 @@ if __name__ == '__main__':
         codings_rnd = np.random.normal(size=[60, model.n_encoded])
         outputs_val = model.outputs.eval(feed_dict={model.encoded: codings_rnd})
 
-    plt.plot(train_loss, label='Train Loss')
-    plt.plot(test_loss, label='Test Loss')
+    plt.plot(train_loss[5:], label='Train Loss')
+    plt.plot(test_loss[5:], label='Test Loss')
     plt.xlabel('Number of Epochs')
     plt.ylabel('Reconstruction Loss')
     plt.title(' Learning Curves')

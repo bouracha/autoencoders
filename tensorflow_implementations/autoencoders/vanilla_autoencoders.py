@@ -387,11 +387,11 @@ class AUTOENCODER(object):
         #Encoding Layers
         n_hidden1 = 500
         #Encoded Layer
-        self.n_encoded = 2
+        self.n_encoded = 20
         #Decoding Layers
         n_hidden3 = n_hidden1
 
-        learning_rate = 0.001
+        learning_rate = 0.02
 
         activation = tf.nn.elu
         initializer = tf.contrib.layers.variance_scaling_initializer()
@@ -473,6 +473,6 @@ class AUTOENCODER(object):
             self.loss = self.reconstruction_loss_xentropy + l*self.reg
 
         #Optimiser
-        self.optimizer = tf.train.AdamOptimizer(learning_rate)
-        #self.optimizer = tf.train.AdagradOptimizer(learning_rate)
+        #self.optimizer = tf.train.AdamOptimizer(learning_rate)
+        self.optimizer = tf.train.AdagradOptimizer(learning_rate)
         self.training_op = self.optimizer.minimize(self.loss)
