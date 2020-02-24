@@ -11,7 +11,7 @@ from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_2
 
 from autoencoders.vanilla_autoencoders import AUTOENCODER
 
-
+import time
 import sys
 sys.path.append("../")
 from helper_functions import *
@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 10
+    num_epochs = 100
 
     model = AUTOENCODER(variational=True)
 
@@ -37,6 +37,7 @@ if __name__ == '__main__':
         train_loss.append(model.loss.eval(session=sess, feed_dict={model.X: train_data}))
         test_loss.append(model.loss.eval(session=sess, feed_dict={model.X: test_data}))
         print("Number of Epochs = " + str(num_epochs))
+        start_time = time.time()
         for epoch in range(num_epochs):
             print(str(epoch) + "/" + str(num_epochs), end="\r")
             n_batches = m//batch_size
@@ -45,6 +46,8 @@ if __name__ == '__main__':
                 sess.run(model.training_op, feed_dict={model.X: X_batch})
             train_loss.append(model.loss.eval(session=sess, feed_dict={model.X: train_data}))
             test_loss.append(model.loss.eval(session=sess, feed_dict={model.X: test_data}))
+        stop_time = time.time()
+        print("Runtime = ", stop_time-start_time, "Seconds")
 
         print("Train Loss: ", train_loss[-1])
         print("Test Loss: ", test_loss[-1])

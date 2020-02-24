@@ -387,7 +387,7 @@ class AUTOENCODER(object):
         #Encoding Layers
         n_hidden1 = 500
         #Encoded Layer
-        self.n_encoded = 20
+        self.n_encoded = 2
         #Decoding Layers
         n_hidden3 = n_hidden1
 
@@ -452,7 +452,8 @@ class AUTOENCODER(object):
             self.encoded_mean = tf.matmul(self.encoder_hidden1, self.weights2_mu) + self.biases2_mu
             self.encoded_gamma = tf.matmul(self.encoder_hidden1, self.weights2_sigma) + self.biases2_sigma
             self.noise = tf.random_normal(tf.shape(self.encoded_gamma), dtype=tf.float32)
-            self.encoded = self.encoded_mean + tf.exp(tf.clip_by_value(0.5 * self.encoded_gamma, clip_value_min=-10, clip_value_max=10)) * self.noise
+            #self.encoded = self.encoded_mean + tf.exp(0.5 * self.encoded_gamma) * self.noise
+            self.encoded = self.encoded_mean + self.encoded_gamma * self.noise
         else:
             self.encoded = tf.matmul(self.encoder_hidden1, self.weights2) + self.biases2
         #Decoding Operations
@@ -466,9 +467,10 @@ class AUTOENCODER(object):
         self.reconstruction_loss_xentropy = tf.reduce_mean(self.xentropy)
         self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.logits - self.X))
         if variational:
-            self.KL_per_example = tf.reduce_sum(tf.exp(tf.clip_by_value(self.encoded_gamma, clip_value_min=-10, clip_value_max=10)) + tf.square(self.encoded_mean) - 1 - self.encoded_gamma, -1)
+            #self.KL_per_example = tf.reduce_sum(tf.exp(self.encoded_gamma) + tf.square(self.encoded_mean) - 1 - self.encoded_gamma, -1)
+            self.KL_per_example = -tf.reduce_sum(1 + tf.log(1e-10 + tf.square(self.encoded_gamma)) - tf.square(self.encoded_mean) - tf.square(self.encoded_gamma))
             self.latent_loss = 0.5 * tf.reduce_mean(self.KL_per_example)
-            self.loss = self.reconstruction_loss_xentropy + self.latent_loss + self.reg
+            self.loss = self.reconstruction_loss_xentropy + self.latent_loss + l*self.reg
         else:
             self.loss = self.reconstruction_loss_xentropy + l*self.reg
 
