@@ -6,8 +6,6 @@ from autoencoders.vanilla_autoencoders import tied_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import denoising_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import sparse_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import AUTOENCODER_500_500_20
-from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_500_200
-from autoencoders.vanilla_autoencoders import VARIATIONAL_AUTOENCODER_500_2
 
 from autoencoders.vanilla_autoencoders import AUTOENCODER
 
@@ -22,7 +20,7 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 50
+    num_epochs = 100
 
     model = AUTOENCODER(variational=True)
 
@@ -55,7 +53,7 @@ if __name__ == '__main__':
         reconstructions = model.outputs.eval(feed_dict={model.X: test_data[0: 10]})
         xentropy_loss = model.reconstruction_loss_xentropy.eval(session=sess, feed_dict={model.X: test_data})
         MSE_loss = model.reconstruction_loss_MSE.eval(session=sess, feed_dict={model.X: test_data})
-        print("XEntropy Loss: ", xentropy_loss)
+        print("XEntropy Loss: ", xentropy_loss/784.0)
         print("MSE Loss: ", MSE_loss)
 
         codings_rnd = np.random.normal(size=[60, model.n_encoded])

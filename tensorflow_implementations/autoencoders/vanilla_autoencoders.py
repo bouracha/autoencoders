@@ -6,7 +6,7 @@ class AUTOENCODER_300_150_300(object):
     def __init__(self, l2_reg):
         n = 28 * 28  # for MNIST
 
-        learning_rate = 0.01
+        self.learning_rate = 0.01
 
         self.X = tf.placeholder(tf.float32, shape=[None, n])
 
@@ -216,168 +216,6 @@ class AUTOENCODER_500_500_20(object):
         self.training_op = self.optimizer.minimize(self.loss)
 
 
-class VARIATIONAL_AUTOENCODER_500_500_200(object):
-
-    def __init__(self):
-        n = 28 * 28  # for MNIST
-        #Encoding Layers
-        n_hidden1 = 500
-        n_hidden2 = 500
-        #Encoded Layer
-        self.n_encoded = 200
-        #Decoding Layers
-        n_hidden4 = n_hidden2
-        n_hidden5 = n_hidden1
-
-        learning_rate = 0.001
-
-        activation = tf.nn.elu
-        initializer = tf.contrib.layers.variance_scaling_initializer()
-
-        self.reg = 0
-        l = 1e-4
-
-        self.X = tf.placeholder(tf.float32, shape=[None, n])
-
-        #Initialise Weights Encoder
-        weights1_init = initializer([n, n_hidden1])
-        weights2_init = initializer([n_hidden1, n_hidden2])
-        weights3_init = initializer([n_hidden2, self.n_encoded])
-        #Initialise Weights Decoder
-        weights4_init = initializer([self.n_encoded, n_hidden4])
-        weights5_init = initializer([n_hidden4, n_hidden5])
-        weights6_init = initializer([n_hidden5, n])
-
-        #Encoder Weights and Biases
-        self.weights1 = tf.Variable(weights1_init, dtype=tf.float32, name="weights1")
-        self.weights2 = tf.Variable(weights2_init, dtype=tf.float32, name="weights2")
-        self.weights3 = tf.Variable(weights3_init, dtype=tf.float32, name="weights3")
-        self.biases1 = tf.Variable(tf.zeros(n_hidden1), name="biases1")
-        self.biases2 = tf.Variable(tf.zeros(n_hidden2), name="biases2")
-        self.biases3 = tf.Variable(tf.zeros(self.n_encoded), name="biases3")
-
-        #Decoder Weights and Biases
-        self.weights4 = tf.Variable(weights4_init, dtype=tf.float32, name="weights4")
-        self.weights5 = tf.Variable(weights5_init, dtype=tf.float32, name="weights5")
-        self.weights6 = tf.Variable(weights6_init, dtype=tf.float32, name="weights6")
-        self.biases4 = tf.Variable(tf.zeros(n_hidden4), name="biases4")
-        self.biases5 = tf.Variable(tf.zeros(n_hidden5), name="biases5")
-        self.biases6 = tf.Variable(tf.zeros(n), name="biases6")
-
-        #Regularisation Terms
-        self.reg = l*tf.reduce_sum(tf.square(self.weights1)) \
-                   + l*tf.reduce_sum(tf.square(self.weights2)) \
-                   + l*tf.reduce_sum(tf.square(self.weights3))   \
-                   + l*tf.reduce_sum(tf.square(self.weights4))   \
-                   + l*tf.reduce_sum(tf.square(self.weights5)) \
-                   + l*tf.reduce_sum(tf.square(self.weights6))
-
-        #Encoding Operations
-        self.normalised_X = (self.X - tf.reduce_min(self.X))/(tf.reduce_max(self.X) - tf.reduce_min(self.X))
-        self.encoder_hidden1 = activation(tf.matmul(self.normalised_X, self.weights1) + self.biases1)
-        self.encoder_hidden2 = activation(tf.matmul(self.encoder_hidden1, self.weights2) + self.biases2)
-        #Encoded Layer
-        self.encoded_mean = tf.matmul(self.encoder_hidden2, self.weights3) + self.biases3
-        self.encoded_gamma = tf.matmul(self.encoder_hidden2, self.weights3) + self.biases3
-        self.noise = tf.random_normal(tf.shape(self.encoded_gamma), dtype=tf.float32)
-        self.encoded = self.encoded_mean + tf.exp(0.5*self.encoded_gamma)*self.noise
-        #Decoding Operations
-        self.decoder_hidden1 = activation(tf.matmul(self.encoded, self.weights4) + self.biases4)
-        self.decoder_hidden2 = activation(tf.matmul(self.decoder_hidden1, self.weights5) + self.biases5)
-        self.logits = tf.matmul(self.decoder_hidden2, self.weights6) + self.biases6
-        self.outputs = tf.sigmoid(self.logits)
-
-        #Loss Function
-        #self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.normalised_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
-        self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.normalised_X, logits=self.logits)
-        self.reconstruction_loss_xentropy = tf.reduce_mean(self.xentropy)
-        self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.logits - self.X))
-        KL_per_example = tf.reduce_sum(tf.exp(self.encoded_gamma) + tf.square(self.encoded_mean) - 1 - self.encoded_gamma, -1)
-        self.latent_loss = 0.5*tf.reduce_mean(KL_per_example)
-        self.loss = self.reconstruction_loss_xentropy + self.latent_loss + self.reg
-
-        #Optimiser
-        self.optimizer = tf.train.AdamOptimizer(learning_rate)
-        self.training_op = self.optimizer.minimize(self.loss)
-
-
-class VARIATIONAL_AUTOENCODER_500_2(object):
-
-    def __init__(self):
-        n = 28 * 28  # for MNIST
-        #Encoding Layers
-        n_hidden1 = 500
-        #Encoded Layer
-        self.n_encoded = 2
-        #Decoding Layers
-        n_hidden3 = n_hidden1
-
-        learning_rate = 0.001
-
-        activation = tf.nn.elu
-        initializer = tf.contrib.layers.variance_scaling_initializer()
-
-        self.reg = 0
-        l = 1e-4
-
-        self.X = tf.placeholder(tf.float32, shape=[None, n])
-
-        #Initialise Weights Encoder
-        weights1_init = initializer([n, n_hidden1])
-        weights2_mu_init = initializer([n_hidden1, self.n_encoded])
-        weights2_sigma_init = initializer([n_hidden1, self.n_encoded])
-        #Initialise Weights Decoder
-        weights3_init = initializer([self.n_encoded, n_hidden3])
-        weights4_init = initializer([n_hidden3, n])
-
-        #Encoder Weights and Biases
-        self.weights1 = tf.Variable(weights1_init, dtype=tf.float32, name="weights1")
-        self.weights2_mu = tf.Variable(weights2_mu_init, dtype=tf.float32, name="weights2_mu")
-        self.weights2_sigma = tf.Variable(weights2_sigma_init, dtype=tf.float32, name="weights2_sigma")
-        self.biases1 = tf.Variable(tf.zeros(n_hidden1), name="biases1")
-        self.biases2_mu = tf.Variable(tf.zeros(self.n_encoded), name="biases2_mu")
-        self.biases2_sigma = tf.Variable(tf.zeros(self.n_encoded), name="biases2_sigma")
-
-        #Decoder Weights and Biases
-        self.weights3 = tf.Variable(weights3_init, dtype=tf.float32, name="weights3")
-        self.weights4 = tf.Variable(weights4_init, dtype=tf.float32, name="weights4")
-        self.biases3 = tf.Variable(tf.zeros(n_hidden3), name="biases3")
-        self.biases4 = tf.Variable(tf.zeros(n), name="biases4")
-
-        #Regularisation Terms
-        self.reg = (l)*tf.reduce_sum(tf.square(self.weights1)) \
-                 + (l)*tf.reduce_sum(tf.square(self.weights2_mu))   \
-                 + (l)*tf.reduce_sum(tf.square(self.weights2_sigma))   \
-                 + (l)*tf.reduce_sum(tf.square(self.weights3))   \
-                 + (l)*tf.reduce_sum(tf.square(self.weights4))
-
-
-        #Encoding Operations
-        self.normalised_X = (self.X - tf.reduce_min(self.X))/(tf.reduce_max(self.X) - tf.reduce_min(self.X))
-        self.encoder_hidden1 = activation(tf.matmul(self.normalised_X, self.weights1) + self.biases1)
-        #Encoded Layer
-        self.encoded_mean = tf.matmul(self.encoder_hidden1, self.weights2_mu) + self.biases2_mu
-        self.encoded_gamma = tf.matmul(self.encoder_hidden1, self.weights2_sigma) + self.biases2_sigma
-        self.noise = tf.random_normal(tf.shape(self.encoded_gamma), dtype=tf.float32)
-        self.encoded = self.encoded_mean + tf.exp(tf.clip_by_value(0.5*self.encoded_gamma, clip_value_min=-10, clip_value_max=10))*self.noise
-        #Decoding Operations
-        self.decoder_hidden1 = activation(tf.matmul(self.encoded, self.weights3) + self.biases3)
-        self.logits = tf.matmul(self.decoder_hidden1, self.weights4) + self.biases4
-        self.outputs = tf.sigmoid(self.logits)
-
-        #Loss Function
-        #self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.normalised_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
-        self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.normalised_X, logits=self.logits)
-        self.reconstruction_loss_xentropy = tf.reduce_mean(self.xentropy)
-        self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.logits - self.X))
-        self.KL_per_example = tf.reduce_sum(tf.exp(tf.clip_by_value(self.encoded_gamma, clip_value_min=-10, clip_value_max=10)) + tf.square(self.encoded_mean) - 1 - self.encoded_gamma, -1)
-        self.latent_loss = 0.5*tf.reduce_mean(self.KL_per_example)
-        self.loss = self.reconstruction_loss_xentropy + self.latent_loss + self.reg
-
-        #Optimiser
-        self.optimizer = tf.train.AdamOptimizer(learning_rate)
-        #self.optimizer = tf.train.AdagradOptimizer(learning_rate)
-        self.training_op = self.optimizer.minimize(self.loss)
 
 
 class AUTOENCODER(object):
@@ -387,19 +225,20 @@ class AUTOENCODER(object):
         #Encoding Layers
         n_hidden1 = 500
         #Encoded Layer
-        self.n_encoded = 2
+        self.n_encoded = 5
         #Decoding Layers
         n_hidden3 = n_hidden1
 
-        learning_rate = 0.001
+        self.learning_rate = 0.001
 
-        activation = tf.nn.elu #lambda x: x*1
+        activation = tf.nn.elu
         initializer = tf.contrib.layers.variance_scaling_initializer()
+
+    def build(self):
+        self.X = tf.placeholder(tf.float32, shape=[None, n])
 
         self.reg = 0
         l = 1e-4
-
-        self.X = tf.placeholder(tf.float32, shape=[None, n])
 
         #Initialise Weights Encoder
         weights1_init = initializer([n, n_hidden1])
@@ -473,5 +312,5 @@ class AUTOENCODER(object):
             self.loss = self.reconstruction_loss_xentropy + l*self.reg
 
         #Optimiser
-        self.optimizer = tf.train.AdamOptimizer(learning_rate)
+        self.optimizer = tf.train.AdamOptimizer(self.self.learning_rate)
         self.training_op = self.optimizer.minimize(self.loss)
