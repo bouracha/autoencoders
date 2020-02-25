@@ -391,9 +391,9 @@ class AUTOENCODER(object):
         #Decoding Layers
         n_hidden3 = n_hidden1
 
-        learning_rate = 0.02
+        learning_rate = 0.001
 
-        activation = tf.nn.elu
+        activation = tf.nn.elu #lambda x: x*1
         initializer = tf.contrib.layers.variance_scaling_initializer()
 
         self.reg = 0
@@ -446,14 +446,14 @@ class AUTOENCODER(object):
 
         #Encoding Operations
         self.normalised_X = (self.X - tf.reduce_min(self.X))/(tf.reduce_max(self.X) - tf.reduce_min(self.X))
+        self.variance_x = tf.reduce_mean(tf.square(self.normalised_X - tf.reduce_mean(self.normalised_X)))
         self.encoder_hidden1 = activation(tf.matmul(self.normalised_X, self.weights1) + self.biases1)
         #Encoded Layer
         if variational:
             self.encoded_mean = tf.matmul(self.encoder_hidden1, self.weights2_mu) + self.biases2_mu
             self.encoded_gamma = tf.matmul(self.encoder_hidden1, self.weights2_sigma) + self.biases2_sigma
             self.noise = tf.random_normal(tf.shape(self.encoded_gamma), dtype=tf.float32)
-            #self.encoded = self.encoded_mean + tf.exp(0.5 * self.encoded_gamma) * self.noise
-            self.encoded = self.encoded_mean + self.encoded_gamma * self.noise
+            self.encoded = self.encoded_mean + tf.exp(self.encoded_gamma) * self.noise
         else:
             self.encoded = tf.matmul(self.encoder_hidden1, self.weights2) + self.biases2
         #Decoding Operations
@@ -464,17 +464,14 @@ class AUTOENCODER(object):
         #Loss Function
         #self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.normalised_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
         self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.normalised_X, logits=self.logits)
-        self.reconstruction_loss_xentropy = tf.reduce_mean(self.xentropy)
+        self.reconstruction_loss_xentropy = tf.reduce_mean(tf.reduce_sum(self.xentropy, axis=-1))
         self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.logits - self.X))
         if variational:
-            #self.KL_per_example = tf.reduce_sum(tf.exp(self.encoded_gamma) + tf.square(self.encoded_mean) - 1 - self.encoded_gamma, -1)
-            self.KL_per_example = -tf.reduce_sum(1 + tf.log(1e-10 + tf.square(self.encoded_gamma)) - tf.square(self.encoded_mean) - tf.square(self.encoded_gamma))
-            self.latent_loss = 0.5 * tf.reduce_mean(self.KL_per_example)
-            self.loss = self.reconstruction_loss_xentropy + self.latent_loss + l*self.reg
+            self.KL = 0.5 * tf.reduce_sum(tf.exp(self.encoded_gamma) + tf.square(self.encoded_mean) - 1 - self.encoded_gamma, axis=-1)
+            self.loss = self.reconstruction_loss_xentropy + tf.reduce_mean(self.KL) + l*self.reg
         else:
             self.loss = self.reconstruction_loss_xentropy + l*self.reg
 
         #Optimiser
-        #self.optimizer = tf.train.AdamOptimizer(learning_rate)
-        self.optimizer = tf.train.AdagradOptimizer(learning_rate)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate)
         self.training_op = self.optimizer.minimize(self.loss)
