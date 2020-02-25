@@ -7,7 +7,7 @@ from autoencoders.vanilla_autoencoders import denoising_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import sparse_AUTOENCODER_300_150_300
 from autoencoders.vanilla_autoencoders import AUTOENCODER_500_500_20
 
-from autoencoders.vanilla_autoencoders import AUTOENCODER
+from autoencoders.VAE import AUTOENCODER
 
 import time
 import sys
