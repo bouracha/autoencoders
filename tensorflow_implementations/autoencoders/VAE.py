@@ -54,52 +54,39 @@ class AUTOENCODER(object):
         #Initialise Weights Encoder
         self.encoder_weights = {}
         self.encoder_biases = {}
-        for i in range(self.n_layers-2):
+        n_encoder_weights = self.n_layers - 2
+        for i in range(n_encoder_weights):
             weight_init = self.initializer([self.encode_layers[i], self.encode_layers[i+1]])
             self.encoder_weights["weights{0}".format(i)] = tf.Variable(weight_init, dtype=tf.float32, name="e_weights"+str(i))
             self.encoder_biases["biases{0}".format(i)] = tf.Variable(tf.zeros(self.encode_layers[i+1]), name="e_biases"+str(i))
+
+        #Initialise Weights for Encoded layer -- depends on variational flag
         if self.variational:
-            weights2_mu_init = self.initializer([self.n_hidden1, self.n_encoded])
-            weights2_sigma_init = self.initializer([self.n_hidden1, self.n_encoded])
+            weights_mu_init = self.initializer([self.n_hidden1, self.n_encoded])
+            weights_sigma_init = self.initializer([self.n_hidden1, self.n_encoded])
         else:
-            weights2_init = self.initializer([self.n_hidden1, self.n_encoded])
+            weights_init = self.initializer([self.n_hidden1, self.n_encoded])
+        if self.variational:
+            self.weights_mu = tf.Variable(weights_mu_init, dtype=tf.float32, name="weights2_mu")
+            self.weights_sigma = tf.Variable(weights_sigma_init, dtype=tf.float32, name="weights2_sigma")
+            self.biases_mu = tf.Variable(tf.zeros(self.n_encoded), name="biases2_mu")
+            self.biases_sigma = tf.Variable(tf.zeros(self.n_encoded), name="biases2_sigma")
+        else:
+            self.weights = tf.Variable(weights_init, dtype=tf.float32, name="weights2")
+            self.biases = tf.Variable(tf.zeros(self.n_encoded), name="biases2")
+
         #Initialise Weights Decoder
         self.decoder_weights = {}
         self.decoder_biases = {}
-        for i in range(self.n_layers-1):
+        n_decoder_weights = self.n_layers - 1
+        for i in range(n_decoder_weights):
             weight_init = self.initializer([self.decode_layers[i], self.decode_layers[i+1]])
             self.decoder_weights["weights{0}".format(i)] = tf.Variable(weight_init, dtype=tf.float32, name="d_weights"+str(i))
             self.decoder_biases["biases{0}".format(i)] = tf.Variable(tf.zeros(self.decode_layers[i+1]), name="d_biases"+str(i))
-        #Encoder Weights and Biases
-
-        if self.variational:
-            self.weights2_mu = tf.Variable(weights2_mu_init, dtype=tf.float32, name="weights2_mu")
-            self.weights2_sigma = tf.Variable(weights2_sigma_init, dtype=tf.float32, name="weights2_sigma")
-            self.biases2_mu = tf.Variable(tf.zeros(self.n_encoded), name="biases2_mu")
-            self.biases2_sigma = tf.Variable(tf.zeros(self.n_encoded), name="biases2_sigma")
-        else:
-            self.weights2 = tf.Variable(weights2_init, dtype=tf.float32, name="weights2")
-            self.biases2 = tf.Variable(tf.zeros(self.n_encoded), name="biases2")
-
-        #Decoder Weights and Biases
-        #self.weights3 = tf.Variable(weights3_init, dtype=tf.float32, name="weights3")
-        #self.weights4 = tf.Variable(weights4_init, dtype=tf.float32, name="weights4")
-        #self.biases3 = tf.Variable(tf.zeros(self.n_hidden3), name="biases3")
-        #self.biases4 = tf.Variable(tf.zeros(self.n), name="biases4")
 
     def graph(self):
         #Regularisation Terms
-        if self.variational:
-            self.reg = tf.reduce_sum(tf.square(self.encoder_weights['weights0'])) \
-                       + tf.reduce_sum(tf.square(self.weights2_mu)) \
-                       + tf.reduce_sum(tf.square(self.weights2_sigma)) \
-                       + tf.reduce_sum(tf.square(self.decoder_weights['weights0'])) \
-                       + tf.reduce_sum(tf.square(self.decoder_weights['weights1']))
-        else:
-            self.reg = tf.reduce_sum(tf.square(self.encoder_weights['weights0'])) \
-                     + tf.reduce_sum(tf.square(self.weights2))   \
-                     + tf.reduce_sum(tf.square(self.decoder_weights['weights0']))   \
-                     + tf.reduce_sum(tf.square(self.decoder_weights['weights1']))
+        self.reg = 0
 
         self.encoder()
         self.decoder()
@@ -111,25 +98,40 @@ class AUTOENCODER(object):
         self.variance_x = tf.reduce_mean(tf.square(self.normalised_X - tf.reduce_mean(self.normalised_X)))
         self.encoder_hiddens = {}
         layer_in = self.normalised_X
-        for i in range(self.n_layers-2):
+        n_layers = self.n_layers - 2
+        for i in range(n_layers):
             self.encoder_hiddens["hiddens{0}".format(i)] = self.activation(tf.matmul(layer_in, self.encoder_weights["weights{0}".format(i)]) + self.encoder_biases["biases{0}".format(i)])
+            self.reg += tf.reduce_sum(tf.square(self.encoder_weights["weights{0}".format(i)]))
             layer_in = self.encoder_hiddens["hiddens{0}".format(i)]
+
         #Encoded Layer
         if self.variational:
-            self.encoded_mean = tf.matmul(self.encoder_hiddens["hiddens0"], self.weights2_mu) + self.biases2_mu
-            self.encoded_gamma = tf.matmul(self.encoder_hiddens["hiddens0"], self.weights2_sigma) + self.biases2_sigma
+            self.encoded_mean = tf.matmul(self.encoder_hiddens["hiddens{0}".format(n_layers-1)], self.weights_mu) + self.biases_mu
+            self.encoded_gamma = tf.matmul(self.encoder_hiddens["hiddens{0}".format(n_layers-1)], self.weights_sigma) + self.biases_sigma
+            self.reg += tf.reduce_sum(tf.square(self.weights_mu)) \
+                      + tf.reduce_sum(tf.square(self.weights_sigma))
+
             self.noise = tf.random_normal(tf.shape(self.encoded_gamma), dtype=tf.float32)
             self.encoded = self.encoded_mean + tf.exp(self.encoded_gamma) * self.noise
         else:
-            self.encoded = tf.matmul(self.encoder_hiddens["hiddens0"], self.weights2) + self.biases2
+            self.encoded = tf.matmul(self.encoder_hiddens["hiddens{0}".format(n_layers-1)], self.weights) + self.biases
+            self.reg += tf.reduce_sum(tf.square(self.weights))
 
     def decoder(self):
+        # Decoding Operations
         self.decoder_hiddens = {}
-        layer_in = self.encoded
-        for i in range(self.n_layers-2):
-            self.decoder_hiddens["hiddens{0}".format(i)] = self.activation(tf.matmul(layer_in, self.decoder_weights["weights{0}".format(i)]) + self.decoder_biases["biases{0}".format(i)])
-            layer_in = self.decoder_hiddens["hiddens{0}".format(i)]
-        #Decoding Operations
-        self.logits = tf.matmul(self.decoder_hiddens["hiddens0"], self.decoder_weights['weights1']) + self.decoder_biases['biases1']
+        a_last = self.encoded
+        n_activated_encoder_layers = self.n_layers-2
+        for i in range(n_activated_encoder_layers):
+            W = self.decoder_weights["weights{0}".format(i)]
+            b = self.decoder_biases["biases{0}".format(i)]
+            a = self.activation(tf.matmul(a_last, W) + b)
+            self.decoder_hiddens["hiddens{0}".format(i)] = a
+            self.reg += tf.reduce_sum(tf.square(W))
+            a_last = a
+        #Final unactivated decoding layer
+        W = self.decoder_weights["weights{0}".format(n_activated_encoder_layers)]
+        b = self.decoder_biases["biases{0}".format(n_activated_encoder_layers)]
+        self.logits = tf.matmul(a_last, W) + b
         self.outputs = tf.sigmoid(self.logits)
 

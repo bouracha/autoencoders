@@ -47,7 +47,7 @@ log_period_samples = 20000
 batch_size = 100
 
 def get_mnist_data():
-    print("Getting MNIST data..")
+    print("Reading MNIST data from file..")
 
     data = np.array(pd.read_csv('mnist_data/data.csv'))
     labels = np.array(pd.read_csv('mnist_data/target.csv'))
