@@ -1,20 +1,17 @@
 import tensorflow as tf
+import numpy as np
 
 class AUTOENCODER(object):
 
-    def __init__(self, n, variational=False, learning_rate=0.001):
-        self.n = n
-        #Encoding Layers
-        #self.n_hidden1 = 500
-        #Encoded Layer
-        self.n_encoded = 784
-        #Decoding Layers
-        #self.n_hidden3 = self.n_hidden1
-        n_neurons = [784, 500, 500, self.n_encoded]
-        #n_layers_rev = n_layers.copy().reverse()
+    def __init__(self, variational=False, learning_rate=0.001, layers=[784, 500, 2]):
+
+        self.n = layers[0]
+        self.n_encoded = layers[-1]
+
+        n_neurons = np.array(layers)
         self.encode_layers = n_neurons
-        self.decode_layers = [self.n_encoded, 500, 500, 784] #n_layers_rev
-        self.n_layers = len(n_neurons)
+        self.decode_layers = np.flipud(n_neurons)
+        self.n_layers = n_neurons.shape[0]
 
         self.variational = variational
         self.learning_rate = learning_rate
@@ -42,30 +39,50 @@ class AUTOENCODER(object):
         self.encoder_variables = {}
         n_encoder_weights = self.n_layers - 2
         for i in range(n_encoder_weights):
-            weight_init = self.initializer([self.encode_layers[i], self.encode_layers[i+1]])
-            self.encoder_variables["weights{0}".format(i)] = tf.Variable(weight_init, dtype=tf.float32, name="e_weights"+str(i))
-            self.encoder_variables["biases{0}".format(i)] = tf.Variable(tf.zeros(self.encode_layers[i+1]), name="e_biases"+str(i))
+            n_last_h = self.encode_layers[i]
+            n_next_h = self.encode_layers[i+1]
+            weight_init = self.initializer([n_last_h, n_next_h])
+            W = tf.Variable(weight_init, dtype=tf.float32, name="e_weights"+str(i))
+            b = tf.Variable(tf.zeros(self.encode_layers[i+1]), name="e_biases"+str(i))
+            self.encoder_variables["weights{0}".format(i)] = W
+            self.encoder_variables["biases{0}".format(i)] = b
 
         #Initialise Weights for Encoded layer -- depends on variational flag
+        n_last_h = self.encode_layers[n_encoder_weights]
+        n_encoded = self.n_encoded
         if self.variational:
-            weights_mu_init = self.initializer([self.encode_layers[n_encoder_weights], self.n_encoded])
-            weights_sigma_init = self.initializer([self.encode_layers[n_encoder_weights], self.n_encoded])
-            self.weights_mu = tf.Variable(weights_mu_init, dtype=tf.float32, name="weights2_mu")
-            self.weights_sigma = tf.Variable(weights_sigma_init, dtype=tf.float32, name="weights2_sigma")
-            self.biases_mu = tf.Variable(tf.zeros(self.n_encoded), name="biases2_mu")
-            self.biases_sigma = tf.Variable(tf.zeros(self.n_encoded), name="biases2_sigma")
+            #Initialise sizes
+            weights_mu_init = self.initializer([n_last_h, n_encoded])
+            weights_sigma_init = self.initializer([n_last_h, n_encoded])
+            #Initialise Variables
+            W_mu = tf.Variable(weights_mu_init, dtype=tf.float32, name="weights2_mu")
+            W_sigma = tf.Variable(weights_sigma_init, dtype=tf.float32, name="weights2_sigma")
+            b_mu = tf.Variable(tf.zeros(n_encoded), name="biases2_mu")
+            b_sigma = tf.Variable(tf.zeros(n_encoded), name="biases2_sigma")
+            self.weights_mu = W_mu
+            self.weights_sigma = W_sigma
+            self.biases_mu = b_mu
+            self.biases_sigma = b_sigma
         else:
-            weights_init = self.initializer([self.encode_layers[n_encoder_weights], self.n_encoded])
-            self.weights = tf.Variable(weights_init, dtype=tf.float32, name="weights2")
-            self.biases = tf.Variable(tf.zeros(self.n_encoded), name="biases2")
+            #Initialise sizes
+            weights_init = self.initializer([n_last_h, self.n_encoded])
+            #Initialise Variables
+            W = tf.Variable(weights_init, dtype=tf.float32, name="weights2")
+            b = tf.Variable(tf.zeros(n_encoded), name="biases2")
+            self.weights = W
+            self.biases = b
 
         #Initialise Weights Decoder
         self.decoder_variables = {}
         n_decoder_weights = self.n_layers - 1
         for i in range(n_decoder_weights):
-            weight_init = self.initializer([self.decode_layers[i], self.decode_layers[i+1]])
-            self.decoder_variables["weights{0}".format(i)] = tf.Variable(weight_init, dtype=tf.float32, name="d_weights"+str(i))
-            self.decoder_variables["biases{0}".format(i)] = tf.Variable(tf.zeros(self.decode_layers[i+1]), name="d_biases"+str(i))
+            n_last_h = self.decode_layers[i]
+            n_next_h = self.decode_layers[i+1]
+            weight_init = self.initializer([n_last_h, n_next_h])
+            W = tf.Variable(weight_init, dtype=tf.float32, name="d_weights"+str(i))
+            b = tf.Variable(tf.zeros(self.decode_layers[i+1]), name="d_biases"+str(i))
+            self.decoder_variables["weights{0}".format(i)] = W
+            self.decoder_variables["biases{0}".format(i)] = b
 
     def graph(self):
         #Regularisation Terms
@@ -84,10 +101,10 @@ class AUTOENCODER(object):
         #Encoded Layer
         a_last = self.encoder_hiddens["hiddens{0}".format(n_activated_encoder_layers-1)]
         if self.variational:
-            z, mu, gamma = self.reparametisation_trick(a_last)
-            self.encoded_mu = mu
-            self.encoded_gamma = gamma
-            self.encoded = z
+            hidden_z, hidden_mu, hidden_gamma = self.reparametisation_trick(a_last)
+            self.encoded_mu = hidden_mu
+            self.encoded_gamma = hidden_gamma
+            self.encoded = hidden_z
         else:
             W = self.weights
             b = self.biases

@@ -28,8 +28,7 @@ if __name__ == '__main__':
 
     num_epochs = 10
 
-    #model = AUTOENCODER_500_500_20()
-    model = AUTOENCODER(784, variational=True, learning_rate=0.001)
+    model = AUTOENCODER(variational=True, learning_rate=0.001, layers=[784, 500, 2])
 
     init = tf.global_variables_initializer()
 
