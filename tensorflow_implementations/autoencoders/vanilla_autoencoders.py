@@ -207,8 +207,8 @@ class AUTOENCODER_500_500_20(object):
         #Loss Function
         #self.xentropy = tf.maximum(self.logits, 0) - tf.multiply(self.logits, self.normalised_X) + tf.log(1 + tf.exp(-tf.abs(self.logits)))
         self.xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.normalised_X, logits=self.logits)
-        self.reconstruction_loss_xentropy = tf.reduce_mean(self.xentropy)
-        self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.logits - self.X))
+        self.reconstruction_loss_xentropy = tf.reduce_mean(tf.reduce_sum(self.xentropy, axis=-1))
+        self.reconstruction_loss_MSE = tf.reduce_mean(tf.square(self.outputs - self.X))
         self.loss = self.reconstruction_loss_xentropy + l*self.reg
 
         #Optimiser

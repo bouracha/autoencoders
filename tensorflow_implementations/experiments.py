@@ -26,10 +26,10 @@ if __name__ == '__main__':
     train_data = (train_data - min)/(max - min)
     test_data = (test_data - min)/(max - min)
 
-    num_epochs = 20
+    num_epochs = 10
 
     #model = AUTOENCODER_500_500_20()
-    model = AUTOENCODER(784, variational=True, learning_rate=0.0003)
+    model = AUTOENCODER(784, variational=True, learning_rate=0.001)
 
     init = tf.global_variables_initializer()
 

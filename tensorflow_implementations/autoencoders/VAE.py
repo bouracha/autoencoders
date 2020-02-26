@@ -5,15 +5,15 @@ class AUTOENCODER(object):
     def __init__(self, n, variational=False, learning_rate=0.001):
         self.n = n
         #Encoding Layers
-        self.n_hidden1 = 500
+        #self.n_hidden1 = 500
         #Encoded Layer
-        self.n_encoded = 200
+        self.n_encoded = 784
         #Decoding Layers
-        self.n_hidden3 = self.n_hidden1
-        n_neurons = [784, 2000, 3000, self.n_encoded]
+        #self.n_hidden3 = self.n_hidden1
+        n_neurons = [784, 500, 500, self.n_encoded]
         #n_layers_rev = n_layers.copy().reverse()
         self.encode_layers = n_neurons
-        self.decode_layers = [self.n_encoded, 3000, 2000, 784] #n_layers_rev
+        self.decode_layers = [self.n_encoded, 500, 500, 784] #n_layers_rev
         self.n_layers = len(n_neurons)
 
         self.variational = variational
