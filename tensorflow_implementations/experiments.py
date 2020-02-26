@@ -20,9 +20,16 @@ if __name__ == '__main__':
 
     train_data, test_data, m = get_mnist_data()
 
-    num_epochs = 10
+    #Normalise
+    max = np.max(train_data)
+    min = np.min(train_data)
+    train_data = (train_data - min)/(max - min)
+    test_data = (test_data - min)/(max - min)
 
-    model = AUTOENCODER(variational=True)
+    num_epochs = 20
+
+    #model = AUTOENCODER_500_500_20()
+    model = AUTOENCODER(784, variational=True, learning_rate=0.0003)
 
     init = tf.global_variables_initializer()
 
