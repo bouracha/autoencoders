@@ -5,6 +5,8 @@ import tensorflow as tf
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.datasets import fetch_openml
 
+import pandas as pd
+
 def test_set_check(identifier, test_ratio, hash):
     return hash(np.int64(identifier)).digest()[-1] < 256*test_ratio
 
@@ -46,9 +48,11 @@ batch_size = 100
 
 def get_mnist_data():
     print("Getting MNIST data..")
-    mnist = fetch_openml('mnist_784', version=1, cache=True)
-    data, labels = mnist["data"], mnist["target"]
 
+    data = np.array(pd.read_csv('mnist_data/data.csv'))
+    labels = np.array(pd.read_csv('mnist_data/target.csv'))
+
+    print('Randomising train and test set...')
     np.random.seed(69)
     train_indices = np.random.permutation(70000)
 
@@ -57,7 +61,7 @@ def get_mnist_data():
 
     m = train_data.shape[0]
 
-    print("Retrieved MNIST data")
+    print("Retrieved randomised MNIST data")
     return train_data, test_data, m
 
 def plot_reconstructions(originals, reconstructions):
